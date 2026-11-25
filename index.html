@@ -1,0 +1,1167 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tông Quân Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Nguyễn Tông Quân, AI Creative. Ba kênh video ngắn Man Math, English Ko Khó và VOZ Story, sản xuất bằng một quy trình AI tự vận hành.">
+<meta property="og:title" content="Tông Quân Studio">
+<meta property="og:description" content="Ba kênh video AI sản xuất bằng một quy trình tự vận hành.">
+<meta property="og:image" content="assets/voz-long-007.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: trang như một timeline dựng phim. Hero = 3 màn hình dọc + 3 track màu kênh;
+   mỗi kênh là một "clip" mang đúng bảng màu thương hiệu của nó; còn lại là studio xám lạnh, yên tĩnh.
+   Chuyển động: 1 cảnh mở màn (chữ + điện thoại bay vào), playhead, băng chữ chạy; còn lại theo cuộn trang. */
+:root {
+  --bg: #eceef2;
+  --surface: #f8f9fb;
+  --ink: #11151d;
+  --muted: #586071;
+  --line: #d3d8e1;
+  --accent: #ff4d2e;
+  --vs: #2f6fde; --ekk: #f08a24; --voz: #d4a514;
+  --display: "Bricolage Grotesque", "Be Vietnam Pro", system-ui, sans-serif;
+  --body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --wrap: 1160px;
+  --ease: cubic-bezier(.2, .7, .1, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1016; --surface: #151a23; --ink: #eef1f6; --muted: #9aa3b4; --line: #262d3a;
+    --accent: #ff6a4d; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1016; --surface: #151a23; --ink: #eef1f6; --muted: #9aa3b4; --line: #262d3a;
+  --accent: #ff6a4d; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 16px/1.6 var(--body); -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.wrap {
+  max-width: var(--wrap); margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.05; letter-spacing: -0.02em; }
+p { margin: 0; }
+.mono { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ---------- Thanh trên ---------- */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
+.progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); transform-origin: left; transform: scaleX(0); }
+.mark { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; }
+.rec { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); flex: none; }
+.nav { display: flex; gap: 20px; flex-wrap: wrap; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; position: relative; }
+.nav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 1.5px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .3s var(--ease); }
+.nav a:hover { color: var(--ink); }
+.nav a:hover::after { transform: scaleX(1); }
+
+/* ---------- Hero ---------- */
+.hero { padding-block: 56px 32px; overflow-x: clip; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+.eyebrow { color: var(--muted); display: flex; gap: 10px; align-items: center; }
+.hero h1 { font-size: clamp(40px, 6.4vw, 78px); font-weight: 800; margin-top: 18px; }
+.hero h1 .line { display: block; overflow: hidden; padding-top: .14em; margin-top: -.14em; padding-bottom: .06em; }
+.hero h1 .line > span { display: inline-block; }
+.hero h1 em { font-style: normal; color: var(--accent); white-space: nowrap; }
+.lede { margin-top: 22px; font-size: 18px; color: var(--muted); max-width: 34em; }
+.lede strong { color: var(--ink); font-weight: 600; }
+.cta { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1.5px solid var(--ink); transition: transform .25s var(--ease), background-color .25s; }
+.btn.solid { background: var(--ink); color: var(--bg); }
+.btn .arr { display: inline-block; transition: transform .25s var(--ease); }
+.btn:hover { transform: translateY(-2px); }
+.btn:hover .arr { transform: translateX(4px); }
+
+.phones { position: relative; height: 470px; --px: 0; --py: 0; }
+.phone { position: absolute; width: 46%; aspect-ratio: 9 / 16; max-width: 100%; display: block; }
+.tilt { width: 100%; height: 100%; transform: translate(calc(var(--px) * var(--depth) * 1px), calc(var(--py) * var(--depth) * 1px)); transition: transform .5s var(--ease); }
+.screen { width: 100%; height: 100%; border-radius: 22px; overflow: hidden; border: 5px solid var(--ink); background: var(--ink); box-shadow: 0 24px 50px -20px rgb(0 0 0 / 0.45); }
+.screen img { width: 100%; height: 100%; object-fit: cover; }
+.phone:nth-child(1) { left: 0; top: 40px; rotate: -7deg; --depth: 10; }
+.phone:nth-child(2) { left: 27%; top: 0; z-index: 2; rotate: 1deg; --depth: 22; }
+.phone:nth-child(3) { right: 0; top: 52px; rotate: 8deg; --depth: 14; }
+
+/* Timeline mini: 3 track */
+.timeline { margin-top: 44px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 14px 16px 16px; position: relative; overflow: hidden; }
+.ruler { display: flex; justify-content: space-between; color: var(--muted); padding-left: 64px; margin-bottom: 8px; font-size: 11px; }
+.track { display: grid; grid-template-columns: 56px 1fr; gap: 8px; align-items: center; margin-top: 6px; }
+.track .lbl { color: var(--muted); font-size: 11px; }
+.lane { position: relative; height: 30px; background: color-mix(in srgb, var(--line) 45%, transparent); border-radius: 6px; overflow: hidden; display: flex; gap: 3px; padding: 3px; }
+.clip { flex: 1; border-radius: 4px; height: 100%; color: #fff; font: 600 11px/24px var(--body); padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; transform-origin: left; }
+.clip.vs { background: var(--vs); } .clip.ekk { background: var(--ekk); } .clip.voz { background: var(--voz); color: #1a1608; }
+.clip.dim { opacity: .5; }
+.playhead { position: absolute; top: 10px; bottom: 10px; left: 30%; width: 2px; background: var(--accent); pointer-events: none; }
+.playhead::before { content: ""; position: absolute; top: -4px; left: -5px; border: 6px solid transparent; border-top-color: var(--accent); }
+
+/* Băng chữ: tên mọi video đã đăng */
+.ticker { margin-top: 28px; overflow: hidden; border-block: 1px solid var(--line); padding-block: 12px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.ticker-track { display: flex; gap: 28px; width: max-content; list-style: none; margin: 0; padding: 0; }
+.ticker li { display: flex; align-items: center; gap: 10px; white-space: nowrap; font-size: 14px; color: var(--muted); }
+.ticker li::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c); flex: none; }
+.ticker .c-vs { --c: var(--vs); } .ticker .c-ekk { --c: var(--ekk); } .ticker .c-voz { --c: var(--voz); }
+
+/* ---------- Số liệu ---------- */
+.stats { border-bottom: 1px solid var(--line); }
+.stats .wrap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stat { padding-block: 26px; padding-inline: 20px; border-left: 1px solid var(--line); }
+.stat:first-child { border-left: 0; padding-left: 0; }
+.stat b { display: block; font: 800 clamp(30px, 4vw, 44px)/1 var(--display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.stat span { display: block; margin-top: 8px; color: var(--muted); font-size: 14px; }
+
+/* ---------- Tiêu đề mục ---------- */
+.sec { padding-block: 88px 0; }
+.sec-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: end; margin-bottom: 36px; }
+.sec-head h2 { font-size: clamp(32px, 4.4vw, 52px); font-weight: 800; }
+.sec-head p { color: var(--muted); max-width: 32em; }
+
+/* ---------- Kênh ---------- */
+.channel { border-radius: 28px; padding: clamp(22px, 4vw, 44px); margin-top: 22px; background: var(--c-bg); color: var(--c-fg); }
+.channel.vs { --c-bg: #0c1530; --c-fg: #eaf0ff; --c-muted: #9fb0d8; --c-accent: #ffcf3f; --c-chip: #1b2a55; }
+.channel.ekk { --c-bg: #fdf3e3; --c-fg: #1d2238; --c-muted: #6a5a45; --c-accent: #2f63e0; --c-chip: #ffe2bd; }
+.channel.voz { --c-bg: #19181a; --c-fg: #f4efe2; --c-muted: #b6ad97; --c-accent: #f2c419; --c-chip: #2c2a2b;
+  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / .05) 1px, transparent 0); background-size: 6px 6px; }
+.ch-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: start; }
+.ch-id { display: flex; gap: 16px; align-items: center; }
+.ch-id img { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; flex: none; }
+.ch-id .logo-wide { width: auto; height: 46px; border-radius: 0; }
+.ch-kicker { color: var(--c-muted); }
+.channel h3 { font-size: clamp(30px, 4vw, 46px); font-weight: 800; }
+.ch-desc { margin-top: 18px; max-width: 40em; opacity: .9; }
+.ch-links { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: var(--c-chip); color: var(--c-fg); text-decoration: none; font-size: 14px; font-weight: 600; transition: transform .25s var(--ease); }
+.pill:hover { outline: 1.5px solid var(--c-accent); transform: translateY(-2px); }
+.facts { display: flex; flex-wrap: wrap; gap: 10px 32px; margin-top: 26px; padding-top: 22px; border-top: 1px solid color-mix(in srgb, var(--c-fg) 16%, transparent); }
+.fact b { font: 800 28px/1 var(--display); color: var(--c-accent); font-variant-numeric: tabular-nums; }
+.fact > span { display: block; color: var(--c-muted); font-size: 13px; margin-top: 4px; }
+.craft { margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.craft li { list-style: none; font-size: 13px; padding: 5px 11px; border-radius: 6px; border: 1px dashed color-mix(in srgb, var(--c-fg) 30%, transparent); }
+
+.reel { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-top: 30px; }
+.card { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; min-width: 0; perspective: 700px; }
+.card .shot { aspect-ratio: 9 / 16; max-width: 100%; border-radius: 14px; overflow: hidden; background: var(--c-chip); position: relative;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .4s var(--ease), box-shadow .4s; }
+.card:hover .shot { box-shadow: 0 18px 36px -16px rgb(0 0 0 / .55); }
+.card .shot img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease); }
+.card:hover .shot img { transform: scale(1.05); }
+.card .shot::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at var(--gx, 50%) var(--gy, 0%), rgb(255 255 255 / .22), transparent 55%); opacity: 0; transition: opacity .3s; pointer-events: none; }
+.card:hover .shot::after { opacity: 1; }
+.card .views { position: absolute; left: 8px; bottom: 8px; z-index: 1; background: rgb(0 0 0 / .72); color: #fff; font: 700 11px/1 var(--mono); padding: 5px 7px; border-radius: 5px; }
+.card .play { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1; opacity: 0; transition: opacity .3s; }
+.card .play i { width: 46px; height: 46px; border-radius: 50%; background: rgb(0 0 0 / .6); display: grid; place-items: center; transform: scale(.7); transition: transform .35s var(--ease); }
+.card .play i::before { content: ""; border-left: 14px solid #fff; border-block: 9px solid transparent; margin-left: 4px; }
+.card:hover .play { opacity: 1; }
+.card:hover .play i { transform: scale(1); }
+.card .t { font-size: 13px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.extra { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; align-items: start; }
+.extra figure { margin: 0; min-width: 0; }
+.extra img { border-radius: 14px; width: 100%; transition: transform .4s var(--ease); }
+.extra figure:hover img { transform: translateY(-4px) rotate(-.6deg); }
+.extra figcaption { font-size: 12px; color: var(--c-muted); margin-top: 6px; }
+.voz-long { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 22px; margin-top: 30px; align-items: center; }
+.voz-long a { display: block; overflow: hidden; border-radius: 14px; }
+.voz-long img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; transition: transform .6s var(--ease); }
+.voz-long a:hover img { transform: scale(1.04); }
+.voz-long p { color: var(--c-muted); font-size: 15px; }
+.voz-long h4 { font: 700 22px/1.2 var(--display); margin: 8px 0 10px; color: var(--c-fg); }
+
+/* ---------- Quy trình ---------- */
+.flow { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--surface); }
+.flow li { padding: 20px 16px 22px; border-left: 1px solid var(--line); position: relative; min-width: 0; }
+.flow li::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--accent); transform-origin: left; transform: scaleX(0); }
+.flow li:first-child { border-left: 0; }
+.flow .tc { color: var(--muted); font-size: 11px; }
+.flow h4 { font: 700 17px/1.2 var(--display); margin: 10px 0 8px; }
+.flow p { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+.flow li.human { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.flow li.human .tc { color: var(--accent); }
+.flow-note { margin-top: 14px; color: var(--muted); font-size: 14px; display: flex; gap: 8px; align-items: center; }
+.flow-note i { width: 12px; height: 12px; border-radius: 3px; background: color-mix(in srgb, var(--accent) 35%, var(--surface)); display: inline-block; flex: none; }
+
+/* ---------- Dữ liệu ---------- */
+.insights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 26px; min-width: 0; }
+.panel.wide { grid-column: 1 / -1; }
+.panel h3 { font-size: 22px; font-weight: 700; }
+.panel > p { color: var(--muted); margin-top: 8px; font-size: 15px; }
+.chart-wrap { margin-top: 18px; overflow-x: auto; }
+.chart { width: 100%; min-width: 520px; height: auto; display: block; }
+.chart text { fill: var(--muted); font: 500 11px var(--mono); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .area { fill: color-mix(in srgb, var(--accent) 14%, transparent); }
+.chart .lineP { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { fill: var(--accent); }
+.chart .halo { fill: var(--accent); opacity: .25; transform-box: fill-box; transform-origin: center; }
+.chart .endlbl { fill: var(--ink); font: 700 14px var(--mono); }
+.bars { margin-top: 22px; display: grid; gap: 14px; }
+.bar-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 64px; gap: 12px; align-items: center; font-size: 14px; }
+.bar { height: 14px; border-radius: 4px; background: color-mix(in srgb, var(--line) 60%, transparent); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 4px; background: var(--ink); transform-origin: left; }
+.bar i.hot { background: var(--accent); }
+.bar-row b { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.src { margin-top: 16px; font-size: 12px; color: var(--muted); }
+
+.tools { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.tools span { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-weight: 500; transition: border-color .25s, transform .25s var(--ease); }
+.tools span:hover { border-color: var(--accent); transform: translateY(-2px); }
+.tools span small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+
+/* ---------- Liên hệ ---------- */
+.contact { background: var(--ink); color: var(--bg); }
+.contact .wrap { padding-block: 72px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 40px; align-items: end; }
+.contact h2 { font-size: clamp(34px, 5vw, 60px); font-weight: 800; }
+.contact p { margin-top: 16px; opacity: .75; max-width: 30em; }
+.contact-list { display: grid; gap: 10px; }
+.contact-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--bg) 22%, transparent); transition: border-color .25s, transform .25s var(--ease); }
+.contact-row:hover { border-color: var(--accent); transform: translateX(4px); }
+.contact-row a, .contact-row span { text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
+.contact-row #email { user-select: all; }
+.contact-row .k { opacity: .6; font-weight: 400; user-select: none; }
+.copy { background: transparent; color: var(--bg); border: 1px solid color-mix(in srgb, var(--bg) 35%, transparent); border-radius: 8px; padding: 6px 10px; font: 600 12px var(--body); cursor: pointer; flex: none; }
+footer { background: var(--ink); color: var(--bg); }
+footer .wrap { padding-block: 20px 28px; border-top: 1px solid color-mix(in srgb, var(--bg) 15%, transparent); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 13px; opacity: .65; }
+
+/* =====================================================================
+   CHUYỂN ĐỘNG — chỉ chạy khi người xem không bật "giảm chuyển động".
+   Trạng thái nghỉ của mọi phần tử luôn hiển thị đầy đủ.
+   ===================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  /* Cảnh mở màn */
+  .hero h1 .line > span { animation: rise 1s var(--ease) both; }
+  .hero h1 .line:nth-child(2) > span { animation-delay: .12s; }
+  .eyebrow, .lede, .cta { animation: fadeUp .9s var(--ease) both; }
+  .lede { animation-delay: .25s; } .cta { animation-delay: .35s; }
+  .phone { animation: flyIn 1.1s var(--ease) both; }
+  .phone:nth-child(1) { animation-delay: .25s; } .phone:nth-child(2) { animation-delay: .1s; } .phone:nth-child(3) { animation-delay: .4s; }
+  .screen { animation: bob 6s ease-in-out infinite; }
+  .phone:nth-child(1) .screen { animation-delay: -2s; } .phone:nth-child(3) .screen { animation-delay: -4s; }
+  .clip { animation: clipIn .6s var(--ease) both; animation-delay: calc(.5s + var(--n, 0) * 45ms); }
+  .playhead { animation: play 14s linear infinite; }
+  .rec { animation: blink 1.6s steps(1) infinite; }
+  .ticker-track { animation: marquee 160s linear infinite; }
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+
+  /* Quy trình: vạch render chạy qua từng bước */
+  .flow li::after { animation: sweep 8.4s var(--ease) infinite; animation-delay: calc(var(--i) * 1.2s); }
+
+  /* Biểu đồ: chạy khi cuộn tới (lớp .in do script gắn) */
+  .panel.in .bar i { animation: grow 1.2s var(--ease) both; }
+  .panel.in .bar-row:nth-child(2) .bar i { animation-delay: .15s; }
+  .chart.in .halo { animation: pulse 2s ease-out 2.2s infinite; }
+
+  @keyframes rise { from { transform: translateY(105%); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } }
+  @keyframes flyIn { from { opacity: 0; translate: 0 90px; scale: .92; } }
+  @keyframes bob { 50% { transform: translateY(-10px); } }
+  @keyframes clipIn { from { transform: scaleX(0); } }
+  @keyframes play { from { left: 88px; } to { left: calc(100% - 18px); } }
+  @keyframes blink { 50% { opacity: .25; } }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+  @keyframes sweep { 0% { transform: scaleX(0); opacity: 1; } 12% { transform: scaleX(1); opacity: 1; } 80% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+  @keyframes grow { from { transform: scaleX(0); } }
+  @keyframes draw { from { stroke-dashoffset: var(--len); } to { stroke-dashoffset: 0; } }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes pulse { from { transform: scale(1); opacity: .35; } to { transform: scale(3.2); opacity: 0; } }
+
+}
+
+/* =====================================================================
+   HIỆU ỨNG CUỘN (GSAP + ScrollTrigger + Lenis). Các lớp dưới chỉ có tác dụng
+   khi script bật chúng; không có JS thì trang vẫn hiện đủ, đứng yên.
+   ===================================================================== */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* Tuyên ngôn: chữ sáng dần theo cuộn */
+.manifesto { min-height: 100svh; display: grid; align-items: center; }
+.manifesto .wrap { padding-block: 96px; width: 100%; }
+.mani-cap { color: var(--muted); margin-bottom: 24px; display: flex; gap: 10px; align-items: center; }
+.mani { font: 700 clamp(30px, 5.2vw, 70px)/1.12 var(--display); letter-spacing: -0.025em; max-width: 17em; }
+.mani b { color: var(--accent); font-weight: 800; }
+.mw { display: inline-block; }
+
+/* Tiêu đề tách từ */
+.w { display: inline-block; overflow: hidden; vertical-align: top; padding-top: .16em; margin-top: -.16em; padding-bottom: .08em; margin-bottom: -.08em; }
+.w > span { display: inline-block; transform-origin: 0 100%; }
+
+/* Kênh xếp chồng */
+.channel { position: relative; }
+.channel::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: #000; opacity: var(--dim, 0); pointer-events: none; }
+.stacking .channel { position: sticky; transform-origin: 50% 100%; }
+
+/* Quy trình chạy ngang (màn hình rộng) */
+.flow-hud, .big { display: none; }
+.flow-h { min-height: 100vh; overflow-x: clip; }
+.flow-h .sec-head { margin-bottom: 24px; }
+.flow-h .flow { display: flex; gap: 20px; width: max-content; border: 0; background: none; border-radius: 0; overflow: visible; }
+.flow-h .flow li, .flow-h .flow li:first-child, .flow-h .flow li:nth-child(even) { width: 380px; min-height: 330px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); padding: 26px 28px; display: flex; flex-direction: column; transition: border-color .3s, transform .5s var(--ease), box-shadow .5s; }
+.flow-h .flow li.human { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.flow-h .flow li::after { display: none; }
+.flow-h .flow li.on { border-color: var(--accent); transform: translateY(-12px); box-shadow: 0 30px 60px -30px color-mix(in srgb, var(--accent) 60%, transparent); }
+.flow-h .big { display: block; font: 800 120px/.85 var(--display); color: transparent; -webkit-text-stroke: 1.5px var(--muted); margin-bottom: auto; padding-bottom: 20px; transition: color .35s, -webkit-text-stroke-color .35s; }
+.flow-h li.on .big { color: var(--accent); -webkit-text-stroke-color: var(--accent); }
+.flow-h .flow h4 { font-size: 24px; }
+.flow-h .flow p { font-size: 15px; }
+.flow-h .flow-hud { display: flex; align-items: center; gap: 20px; margin-bottom: 26px; }
+.flow-hud b { font: 700 clamp(28px, 3.4vw, 42px)/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.flow-hud .of { color: var(--muted); font: 500 14px var(--mono); }
+.flow-bar { flex: 1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.flow-bar i { display: block; height: 100%; background: var(--accent); transform-origin: left; transform: scaleX(0); }
+
+/* Phần kết: chữ khổng lồ + khung mở ra */
+.outro { background: var(--ink); color: var(--bg); margin-top: 120px; }
+.mega { overflow: hidden; padding-block: 64px 8px; display: grid; gap: 4px; }
+.mega-row { display: flex; gap: .35em; white-space: nowrap; width: max-content; font: 800 clamp(56px, 11vw, 168px)/1.02 var(--display); letter-spacing: -0.035em; }
+.mega-row .o { color: transparent; -webkit-text-stroke: 1.5px color-mix(in srgb, var(--bg) 65%, transparent); }
+.mega-row .a { color: var(--accent); }
+
+/* Con trỏ "XEM" trên ảnh bìa */
+.cursor { position: fixed; left: 0; top: 0; z-index: 50; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; border: 1.5px solid var(--accent); pointer-events: none; display: grid; place-items: center; color: #fff; font: 700 11px var(--mono); letter-spacing: .08em; opacity: 0; transition: width .35s var(--ease), height .35s var(--ease), margin .35s var(--ease), background-color .3s, opacity .3s; }
+.cursor.show { opacity: 1; }
+.cursor.big { width: 86px; height: 86px; margin: -43px 0 0 -43px; background: var(--accent); }
+.cursor span { opacity: 0; transition: opacity .2s; }
+.cursor.big span { opacity: 1; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+  .reel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow li { border-left: 0; border-top: 1px solid var(--line); }
+  .flow li:nth-child(even) { border-left: 1px solid var(--line); }
+  .flow li:nth-child(-n+2) { border-top: 0; }
+  .extra { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .extra figure:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 820px) {
+  .hero-grid, .sec-head, .insights, .contact .wrap, .voz-long { grid-template-columns: minmax(0, 1fr); }
+  .phones { height: 380px; max-width: 440px; width: 100%; margin: 0 auto; }
+  .stats .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat { border-left: 0; padding-left: 0; }
+  .ch-top { grid-template-columns: minmax(0, 1fr); }
+  .ch-links { justify-content: flex-start; }
+  .nav { display: none; }
+}
+@media (max-width: 520px) {
+  .phones { height: 300px; }
+  .ruler { display: none; }
+  .clip { font-size: 0; padding: 0; }
+  .track { grid-template-columns: 44px 1fr; }
+  .track .lbl { font-size: 10px; }
+  .bar-row { grid-template-columns: 110px minmax(0, 1fr) 52px; font-size: 13px; }
+  .reel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .flow li, .flow li:nth-child(even) { border-left: 0; border-top: 1px solid var(--line); }
+  .flow li:first-child { border-top: 0; }
+  .extra { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="#top"><span class="rec" aria-hidden="true"></span>Tông Quân Studio</a>
+    <nav class="nav" aria-label="Mục lục">
+      <a href="#kenh">Kênh</a>
+      <a href="#quy-trinh">Quy trình</a>
+      <a href="#du-lieu">Dữ liệu</a>
+      <a href="#lien-he">Liên hệ</a>
+    </nav>
+  </div>
+  <span class="progress" aria-hidden="true"></span>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow mono"><span class="rec" aria-hidden="true"></span>Nguyễn Tông Quân · AI Creative</p>
+          <h1><span class="line"><span>Ba kênh video.</span></span><span class="line"><span>Một xưởng AI <em>tự&nbsp;chạy.</em></span></span></h1>
+          <p class="lede">Tôi thiết kế hình ảnh, viết kịch bản và xây quy trình tự động để sản xuất video ngắn cho YouTube, TikTok và Facebook. Từ tháng 10/2026, xưởng đã đăng <strong><span data-k="videos_total">93</span> video</strong> với <strong>3 phong cách hình ảnh</strong> khác nhau. Việc của tôi là định hướng sáng tạo và duyệt bản cuối.</p>
+          <div class="cta">
+            <a class="btn solid" href="#kenh">Xem các kênh <span class="arr" aria-hidden="true">→</span></a>
+            <a class="btn" href="#lien-he">Liên hệ hợp tác</a>
+          </div>
+        </div>
+        <div class="phones" aria-label="Ảnh bìa tiêu biểu của 3 kênh">
+          <a class="phone" href="https://youtube.com/shorts/jAP_HEVcTW4" target="_blank" rel="noopener"><div class="tilt"><div class="screen"><img src="assets/vs-natri.webp" alt="Ảnh bìa Man Math: Kim loại nổ trong nước?" width="480" height="853"></div></div></a>
+          <a class="phone" href="https://youtube.com/shorts/RgpXLxTMnf4" target="_blank" rel="noopener"><div class="tilt"><div class="screen"><img src="assets/ekk-015-scrib.webp" alt="Ảnh bìa English Ko Khó: SUBSCRIBE gốc là gì?" width="480" height="853"></div></div></a>
+          <a class="phone" href="https://youtube.com/shorts/JSfvFnVWkAw" target="_blank" rel="noopener"><div class="tilt"><div class="screen"><img src="assets/voz-VOZ-002-S1.webp" alt="Ảnh bìa VOZ Story: 48K bán trên app, quán nhận bao nhiêu?" width="480" height="853"></div></div></a>
+        </div>
+      </div>
+
+      <div class="timeline" aria-label="Lịch đăng một tuần của 3 kênh">
+        <div class="ruler mono"><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span></div>
+        <div class="track"><span class="lbl mono">V1 · STEM</span>
+          <div class="lane"><span class="clip vs dim" style="--n:0">nghỉ</span><span class="clip vs" style="--n:1">18:00</span><span class="clip vs" style="--n:2">18:00</span><span class="clip vs" style="--n:3">18:00</span><span class="clip vs dim" style="--n:4">nghỉ</span><span class="clip vs" style="--n:5">09:30</span><span class="clip vs" style="--n:6">09:00</span></div></div>
+        <div class="track"><span class="lbl mono">V2 · EKK</span>
+          <div class="lane"><span class="clip ekk" style="--n:2">20:00</span><span class="clip ekk" style="--n:3">20:00</span><span class="clip ekk" style="--n:4">20:00</span><span class="clip ekk" style="--n:5">20:00</span><span class="clip ekk" style="--n:6">20:00</span><span class="clip ekk" style="--n:7">20:00</span><span class="clip ekk" style="--n:8">20:00</span></div></div>
+        <div class="track"><span class="lbl mono">V3 · VOZ</span>
+          <div class="lane"><span class="clip voz" style="--n:4">Dài 19:00</span><span class="clip voz" style="--n:5">Short</span><span class="clip voz" style="--n:6">Short</span><span class="clip voz" style="--n:7">Short</span><span class="clip voz" style="--n:8">Dài 19:00</span><span class="clip voz" style="--n:9">Short</span><span class="clip voz" style="--n:10">Short</span></div></div>
+        <span class="playhead" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div class="ticker" aria-label="Tên các video đã đăng">
+      <ul class="ticker-track">
+<!--ticker-->
+        <li class="c-ekk">Giới thiệu và giảm giá chung một gốc? DUC = dẫn: hiểu luôn 6 từ tiếng Anh</li>
+        <li class="c-ekk">Microscope là kính hiển vi: tiếng Anh ghép từ y hệt Hán Việt</li>
+        <li class="c-ekk">Nice từng nghĩa là ngốc? 4 từ tiếng Anh đổi nghĩa theo thời gian</li>
+        <li class="c-vs">ADN trong mỗi tế bào dài 2 mét: làm sao nhét vừa?</li>
+        <li class="c-ekk">MAL trong malware là gì? MAL và BENE: hiểu luôn 6 từ tiếng Anh</li>
+        <li class="c-voz">Giá gạch ngang: châu Âu bắt tính giá thấp nhất 30 ngày</li>
+        <li class="c-vs">Muối + đá: vì sao còn lạnh hơn cả đá?</li>
+        <li class="c-ekk">Nút Sync giấu chữ gì? CHRON = thời gian: hiểu luôn 6 từ tiếng Anh</li>
+        <li class="c-voz">Từng lỗ 4 xu mỗi đô bán ra, sàn lấy đâu ra mã giảm giá?</li>
+        <li class="c-ekk">Không tra từ điển vẫn đoán ra nghĩa? Thử 4 từ tiếng Anh: prepaid, attractive…</li>
+        <li class="c-voz">Mã của sàn, nhưng người bán trả tới 40%?</li>
+        <li class="c-vs">Vì sao lon nước ngọt có hình dáng này? Bài toán tối ưu</li>
+        <li class="c-ekk">Hợp đồng và máy kéo chung một gốc? TRACT = kéo: hiểu luôn 6 từ tiếng Anh</li>
+        <li class="c-vs">Vì sao chai nhựa để trong tủ lạnh bị móp?</li>
+        <li class="c-ekk">economic hay economical? Phân biệt 2 chữ &quot;kinh tế&quot; trong tiếng Anh</li>
+        <li class="c-voz">Ai thực sự trả tiền cho mã giảm giá?</li>
+        <li class="c-vs">Vì sao tàu biển phải gắn những cục kẽm?</li>
+        <li class="c-ekk">Chữ P trong PM là gì? PRE và POST: hiểu luôn 6 từ tiếng Anh</li>
+        <li class="c-voz">Nút &quot;Không quan tâm&quot; chặn được bao nhiêu?</li>
+        <li class="c-ekk">Chữ ô tô gốc Hy Lạp nghĩa là TỰ: democracy, automatic và 3 từ nữa</li>
+        <li class="c-voz">300 lượt thích hiểu bạn hơn cả vợ, chồng?</li>
+        <li class="c-vs">Ba cánh cửa: đổi lựa chọn có lợi hơn không? (Monty Hall)</li>
+        <li class="c-ekk">PATH không phải con đường: sympathy, empathy, apathy và 3 từ nữa</li>
+        <li class="c-voz">Bấm thích là tín hiệu nhẹ nhất trên bảng tin?</li>
+        <li class="c-vs">Vì sao anh chị em ruột không giống hệt nhau? (Giảm phân)</li>
+        <li class="c-ekk">Sandwich là tên người? 5 từ tiếng Anh mang tên người thật</li>
+        <li class="c-voz">Vì sao bảng tin dường như hiểu sở thích của bạn?</li>
+        <li class="c-ekk">Chữ ĐƯỢC trong tiếng Anh: đuôi ABLE / IBLE và 6 từ</li>
+        <li class="c-voz">Người dùng biết mình hay quên hủy — và họ né luôn</li>
+        <li class="c-vs">Vì sao mùa đông chạm tay nắm cửa hay bị &quot;giật&quot;?</li>
+        <li class="c-ekk">Chưa học vẫn đoán ra nghĩa? Thử thách 4 từ tiếng Anh: television, unsubscribe…</li>
+        <li class="c-voz">Trả 17 đô mỗi buổi tập vì &quot;tháng sau sẽ đi đều&quot;</li>
+        <li class="c-vs">Tờ giấy chỉ có MỘT mặt? Dải Möbius</li>
+        <li class="c-ekk">Subscribe ngày xưa nghĩa là gì? Gốc SCRIB và 6 từ tiếng Anh</li>
+        <li class="c-voz">Quy trình hủy mang tên một cuộc chiến 10 năm</li>
+        <li class="c-vs">Túi sưởi tay: vì sao &quot;gỉ sắt&quot; lại làm ấm tay?</li>
+        <li class="c-ekk">affect hay effect? Mẹo phân biệt 2 từ tiếng Anh ai cũng hay nhầm</li>
+        <li class="c-voz">Vì sao đăng ký dễ nhưng hủy thuê bao lại khó?</li>
+        <li class="c-ekk">Phone lúc đầu đâu phải điện thoại! Gốc PHON và 7 từ tiếng Anh</li>
+        <li class="c-voz">Vì sao đặt một ly trà đá qua app lại đắt?</li>
+        <li class="c-vs">Vì sao cho dứa vào thì thạch không đông?</li>
+        <li class="c-ekk">Nhiệt kế là thermometer: tiếng Anh ghép từ y hệt Hán Việt</li>
+        <li class="c-voz">Đơn đồ ăn 70.000đ, app lời bao nhiêu?</li>
+        <li class="c-vs">Chất lỏng mà đấm vào thì cứng như đá: chất lỏng phi Newton</li>
+        <li class="c-ekk">Video nghĩa là &quot;tôi thấy&quot;? Gốc VIS/VID và 7 từ tiếng Anh</li>
+        <li class="c-voz">Tô bún 48.000đ trên app, quán nhận được bao nhiêu?</li>
+        <li class="c-ekk">5 từ tiếng Anh mang tên thần thoại Hy Lạp: panic, echo, atlas</li>
+        <li class="c-voz">Một đơn đồ ăn 39.000đ thành 70.000đ như thế nào?</li>
+        <li class="c-vs">Gấp đôi tờ giấy 42 lần là chạm tới Mặt Trăng?</li>
+        <li class="c-ekk">UN, IN, IM, IL, IR: thêm 2 chữ cái là lật ngược nghĩa từ tiếng Anh</li>
+        <li class="c-voz">Mua 100 nghìn trong app, cửa hàng giữ bao nhiêu?</li>
+        <li class="c-vs">Mentos + Coca: phản ứng hoá học hay &quot;cú lừa&quot; vật lý?</li>
+        <li class="c-ekk">Chưa học vẫn đoán ra nghĩa? Thử thách 4 từ tiếng Anh theo gốc từ</li>
+        <li class="c-voz">Spotify miễn phí, nhưng 89% tiền đến từ đâu?</li>
+        <li class="c-vs">Thả nam châm vào ống đồng: vì sao nó rơi chậm như đang bay?</li>
+        <li class="c-ekk">Gốc DICT: từ điển, dự đoán, độc tài chung 1 gốc tiếng Anh</li>
+        <li class="c-voz">App miễn phí: vì sao 97,6% doanh thu là quảng cáo?</li>
+        <li class="c-ekk">respectful, respectable, respective: phân biệt 3 từ tiếng Anh dễ nhầm</li>
+        <li class="c-voz">Nếu một ứng dụng miễn phí, nó kiếm tiền bằng cách nào?</li>
+        <li class="c-vs">Chỉ 23 người mà 50% có hai người trùng sinh nhật?</li>
+        <li class="c-ekk">Gốc GRAPH: chụp ảnh, chữ ký, địa lý chung 1 gốc tiếng Anh</li>
+        <li class="c-voz">Freeship có thật sự miễn phí?</li>
+        <li class="c-vs">Vì sao natri nổ tung khi gặp nước?</li>
+        <li class="c-ekk">Gốc PORT: biết 1 gốc, hiểu luôn 7 từ tiếng Anh</li>
+        <li class="c-voz">Năm 1954, một con tàu chở 194.582 kiện hàng lẻ</li>
+        <li class="c-ekk">Đuôi -LOGY là môn học: biết 1 đuôi, hiểu 5 từ tiếng Anh</li>
+        <li class="c-voz">800 đồng vượt biển, 21.000 đồng cho 5 km cuối?</li>
+        <li class="c-vs">Tín hiệu thần kinh chạy qua cơ thể như thế nào?</li>
+        <li class="c-ekk">Tên tháng 9 mà nghĩa là bảy: vì sao?</li>
+        <li class="c-vs">Vì sao sinh vật biển sâu tự phát sáng?</li>
+        <li class="c-ekk">Gốc SPECT: biết 1 gốc, hiểu luôn 8 từ tiếng Anh</li>
+        <li class="c-voz">Vì sao hàng đi nửa vòng Trái Đất mà phí ship vẫn rẻ?</li>
+        <li class="c-vs">Một tế bào hoá hai như thế nào?</li>
+        <li class="c-vs">Slime: chảy như nước, kéo thành sợi</li>
+        <li class="c-vs">Pin tạo ra điện như thế nào</li>
+        <li class="c-vs">Kim loại tan chảy trong lòng bàn tay</li>
+        <li class="c-vs">Que phát sáng</li>
+        <li class="c-vs">Cây muối tự mọc</li>
+        <li class="c-vs">Màu của pháo hoa</li>
+        <li class="c-vs">Kem đánh răng voi</li>
+        <li class="c-vs">Chai nước tự đổi màu</li>
+        <li class="c-vs">Cầu vồng từ axit và bazơ</li>
+        <li class="c-vs">∞ có phải là một con số?</li>
+        <li class="c-vs">Tại sao √2 là số vô tỷ?</li>
+        <li class="c-vs">Chất lỏng hóa rắn trong tích tắc</li>
+        <li class="c-vs">Liên kết hoá học là kéo co electron</li>
+        <li class="c-vs">0,999... có bằng 1 không?</li>
+        <li class="c-vs">π thực sự là gì?</li>
+        <li class="c-vs">Tại sao âm × âm = dương?</li>
+        <li class="c-vs">Tại sao không thể chia cho 0?</li>
+        <li class="c-vs">Xác suất là gì?</li>
+        <li class="c-vs">Tích phân là gì?</li>
+        <li class="c-vs">Đạo hàm là gì?</li>
+        <li aria-hidden="true" class="c-ekk">Giới thiệu và giảm giá chung một gốc? DUC = dẫn: hiểu luôn 6 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-ekk">Microscope là kính hiển vi: tiếng Anh ghép từ y hệt Hán Việt</li>
+        <li aria-hidden="true" class="c-ekk">Nice từng nghĩa là ngốc? 4 từ tiếng Anh đổi nghĩa theo thời gian</li>
+        <li aria-hidden="true" class="c-vs">ADN trong mỗi tế bào dài 2 mét: làm sao nhét vừa?</li>
+        <li aria-hidden="true" class="c-ekk">MAL trong malware là gì? MAL và BENE: hiểu luôn 6 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Giá gạch ngang: châu Âu bắt tính giá thấp nhất 30 ngày</li>
+        <li aria-hidden="true" class="c-vs">Muối + đá: vì sao còn lạnh hơn cả đá?</li>
+        <li aria-hidden="true" class="c-ekk">Nút Sync giấu chữ gì? CHRON = thời gian: hiểu luôn 6 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Từng lỗ 4 xu mỗi đô bán ra, sàn lấy đâu ra mã giảm giá?</li>
+        <li aria-hidden="true" class="c-ekk">Không tra từ điển vẫn đoán ra nghĩa? Thử 4 từ tiếng Anh: prepaid, attractive…</li>
+        <li aria-hidden="true" class="c-voz">Mã của sàn, nhưng người bán trả tới 40%?</li>
+        <li aria-hidden="true" class="c-vs">Vì sao lon nước ngọt có hình dáng này? Bài toán tối ưu</li>
+        <li aria-hidden="true" class="c-ekk">Hợp đồng và máy kéo chung một gốc? TRACT = kéo: hiểu luôn 6 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-vs">Vì sao chai nhựa để trong tủ lạnh bị móp?</li>
+        <li aria-hidden="true" class="c-ekk">economic hay economical? Phân biệt 2 chữ &quot;kinh tế&quot; trong tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Ai thực sự trả tiền cho mã giảm giá?</li>
+        <li aria-hidden="true" class="c-vs">Vì sao tàu biển phải gắn những cục kẽm?</li>
+        <li aria-hidden="true" class="c-ekk">Chữ P trong PM là gì? PRE và POST: hiểu luôn 6 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Nút &quot;Không quan tâm&quot; chặn được bao nhiêu?</li>
+        <li aria-hidden="true" class="c-ekk">Chữ ô tô gốc Hy Lạp nghĩa là TỰ: democracy, automatic và 3 từ nữa</li>
+        <li aria-hidden="true" class="c-voz">300 lượt thích hiểu bạn hơn cả vợ, chồng?</li>
+        <li aria-hidden="true" class="c-vs">Ba cánh cửa: đổi lựa chọn có lợi hơn không? (Monty Hall)</li>
+        <li aria-hidden="true" class="c-ekk">PATH không phải con đường: sympathy, empathy, apathy và 3 từ nữa</li>
+        <li aria-hidden="true" class="c-voz">Bấm thích là tín hiệu nhẹ nhất trên bảng tin?</li>
+        <li aria-hidden="true" class="c-vs">Vì sao anh chị em ruột không giống hệt nhau? (Giảm phân)</li>
+        <li aria-hidden="true" class="c-ekk">Sandwich là tên người? 5 từ tiếng Anh mang tên người thật</li>
+        <li aria-hidden="true" class="c-voz">Vì sao bảng tin dường như hiểu sở thích của bạn?</li>
+        <li aria-hidden="true" class="c-ekk">Chữ ĐƯỢC trong tiếng Anh: đuôi ABLE / IBLE và 6 từ</li>
+        <li aria-hidden="true" class="c-voz">Người dùng biết mình hay quên hủy — và họ né luôn</li>
+        <li aria-hidden="true" class="c-vs">Vì sao mùa đông chạm tay nắm cửa hay bị &quot;giật&quot;?</li>
+        <li aria-hidden="true" class="c-ekk">Chưa học vẫn đoán ra nghĩa? Thử thách 4 từ tiếng Anh: television, unsubscribe…</li>
+        <li aria-hidden="true" class="c-voz">Trả 17 đô mỗi buổi tập vì &quot;tháng sau sẽ đi đều&quot;</li>
+        <li aria-hidden="true" class="c-vs">Tờ giấy chỉ có MỘT mặt? Dải Möbius</li>
+        <li aria-hidden="true" class="c-ekk">Subscribe ngày xưa nghĩa là gì? Gốc SCRIB và 6 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Quy trình hủy mang tên một cuộc chiến 10 năm</li>
+        <li aria-hidden="true" class="c-vs">Túi sưởi tay: vì sao &quot;gỉ sắt&quot; lại làm ấm tay?</li>
+        <li aria-hidden="true" class="c-ekk">affect hay effect? Mẹo phân biệt 2 từ tiếng Anh ai cũng hay nhầm</li>
+        <li aria-hidden="true" class="c-voz">Vì sao đăng ký dễ nhưng hủy thuê bao lại khó?</li>
+        <li aria-hidden="true" class="c-ekk">Phone lúc đầu đâu phải điện thoại! Gốc PHON và 7 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Vì sao đặt một ly trà đá qua app lại đắt?</li>
+        <li aria-hidden="true" class="c-vs">Vì sao cho dứa vào thì thạch không đông?</li>
+        <li aria-hidden="true" class="c-ekk">Nhiệt kế là thermometer: tiếng Anh ghép từ y hệt Hán Việt</li>
+        <li aria-hidden="true" class="c-voz">Đơn đồ ăn 70.000đ, app lời bao nhiêu?</li>
+        <li aria-hidden="true" class="c-vs">Chất lỏng mà đấm vào thì cứng như đá: chất lỏng phi Newton</li>
+        <li aria-hidden="true" class="c-ekk">Video nghĩa là &quot;tôi thấy&quot;? Gốc VIS/VID và 7 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Tô bún 48.000đ trên app, quán nhận được bao nhiêu?</li>
+        <li aria-hidden="true" class="c-ekk">5 từ tiếng Anh mang tên thần thoại Hy Lạp: panic, echo, atlas</li>
+        <li aria-hidden="true" class="c-voz">Một đơn đồ ăn 39.000đ thành 70.000đ như thế nào?</li>
+        <li aria-hidden="true" class="c-vs">Gấp đôi tờ giấy 42 lần là chạm tới Mặt Trăng?</li>
+        <li aria-hidden="true" class="c-ekk">UN, IN, IM, IL, IR: thêm 2 chữ cái là lật ngược nghĩa từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Mua 100 nghìn trong app, cửa hàng giữ bao nhiêu?</li>
+        <li aria-hidden="true" class="c-vs">Mentos + Coca: phản ứng hoá học hay &quot;cú lừa&quot; vật lý?</li>
+        <li aria-hidden="true" class="c-ekk">Chưa học vẫn đoán ra nghĩa? Thử thách 4 từ tiếng Anh theo gốc từ</li>
+        <li aria-hidden="true" class="c-voz">Spotify miễn phí, nhưng 89% tiền đến từ đâu?</li>
+        <li aria-hidden="true" class="c-vs">Thả nam châm vào ống đồng: vì sao nó rơi chậm như đang bay?</li>
+        <li aria-hidden="true" class="c-ekk">Gốc DICT: từ điển, dự đoán, độc tài chung 1 gốc tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">App miễn phí: vì sao 97,6% doanh thu là quảng cáo?</li>
+        <li aria-hidden="true" class="c-ekk">respectful, respectable, respective: phân biệt 3 từ tiếng Anh dễ nhầm</li>
+        <li aria-hidden="true" class="c-voz">Nếu một ứng dụng miễn phí, nó kiếm tiền bằng cách nào?</li>
+        <li aria-hidden="true" class="c-vs">Chỉ 23 người mà 50% có hai người trùng sinh nhật?</li>
+        <li aria-hidden="true" class="c-ekk">Gốc GRAPH: chụp ảnh, chữ ký, địa lý chung 1 gốc tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Freeship có thật sự miễn phí?</li>
+        <li aria-hidden="true" class="c-vs">Vì sao natri nổ tung khi gặp nước?</li>
+        <li aria-hidden="true" class="c-ekk">Gốc PORT: biết 1 gốc, hiểu luôn 7 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Năm 1954, một con tàu chở 194.582 kiện hàng lẻ</li>
+        <li aria-hidden="true" class="c-ekk">Đuôi -LOGY là môn học: biết 1 đuôi, hiểu 5 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">800 đồng vượt biển, 21.000 đồng cho 5 km cuối?</li>
+        <li aria-hidden="true" class="c-vs">Tín hiệu thần kinh chạy qua cơ thể như thế nào?</li>
+        <li aria-hidden="true" class="c-ekk">Tên tháng 9 mà nghĩa là bảy: vì sao?</li>
+        <li aria-hidden="true" class="c-vs">Vì sao sinh vật biển sâu tự phát sáng?</li>
+        <li aria-hidden="true" class="c-ekk">Gốc SPECT: biết 1 gốc, hiểu luôn 8 từ tiếng Anh</li>
+        <li aria-hidden="true" class="c-voz">Vì sao hàng đi nửa vòng Trái Đất mà phí ship vẫn rẻ?</li>
+        <li aria-hidden="true" class="c-vs">Một tế bào hoá hai như thế nào?</li>
+        <li aria-hidden="true" class="c-vs">Slime: chảy như nước, kéo thành sợi</li>
+        <li aria-hidden="true" class="c-vs">Pin tạo ra điện như thế nào</li>
+        <li aria-hidden="true" class="c-vs">Kim loại tan chảy trong lòng bàn tay</li>
+        <li aria-hidden="true" class="c-vs">Que phát sáng</li>
+        <li aria-hidden="true" class="c-vs">Cây muối tự mọc</li>
+        <li aria-hidden="true" class="c-vs">Màu của pháo hoa</li>
+        <li aria-hidden="true" class="c-vs">Kem đánh răng voi</li>
+        <li aria-hidden="true" class="c-vs">Chai nước tự đổi màu</li>
+        <li aria-hidden="true" class="c-vs">Cầu vồng từ axit và bazơ</li>
+        <li aria-hidden="true" class="c-vs">∞ có phải là một con số?</li>
+        <li aria-hidden="true" class="c-vs">Tại sao √2 là số vô tỷ?</li>
+        <li aria-hidden="true" class="c-vs">Chất lỏng hóa rắn trong tích tắc</li>
+        <li aria-hidden="true" class="c-vs">Liên kết hoá học là kéo co electron</li>
+        <li aria-hidden="true" class="c-vs">0,999... có bằng 1 không?</li>
+        <li aria-hidden="true" class="c-vs">π thực sự là gì?</li>
+        <li aria-hidden="true" class="c-vs">Tại sao âm × âm = dương?</li>
+        <li aria-hidden="true" class="c-vs">Tại sao không thể chia cho 0?</li>
+        <li aria-hidden="true" class="c-vs">Xác suất là gì?</li>
+        <li aria-hidden="true" class="c-vs">Tích phân là gì?</li>
+        <li aria-hidden="true" class="c-vs">Đạo hàm là gì?</li>
+<!--/ticker-->
+      </ul>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats" aria-label="Số liệu tổng">
+    <div class="wrap">
+      <div class="stat"><b class="count" data-k="yt_total">65.124</b><span>lượt xem YouTube của 3 kênh</span></div>
+      <div class="stat"><b class="count" data-k="videos_total">93</b><span>video đã đăng (Shorts và video dài)</span></div>
+      <div class="stat"><b class="count" data-k="growth_30d">+50.273</b><span>lượt xem YouTube trong 30 ngày qua</span></div>
+      <div class="stat"><b class="count">1.200+</b><span>người theo dõi fanpage</span></div>
+    </div>
+  </section>
+
+  <!-- MANIFESTO -->
+  <section class="manifesto" aria-label="Cách xưởng vận hành">
+    <div class="wrap">
+      <p class="mani-cap mono"><span class="rec" aria-hidden="true"></span>Cách xưởng vận hành</p>
+      <p class="mani">Mỗi ngày có video mới lên sóng ở <b>3 kênh</b>. Kịch bản, giọng đọc, dựng hình, render và hẹn giờ đăng đều do <b>máy</b> làm. Tôi làm đúng một việc: quyết định video nào <b>đủ đẹp</b> để lên sóng.</p>
+    </div>
+  </section>
+
+  <!-- CHANNELS -->
+  <section class="sec" id="kenh">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2>Ba kênh, ba cách kể chuyện bằng hình.</h2>
+        <p>Mỗi kênh có bộ nhận diện riêng: logo, màu, font, nhịp dựng và công thức ảnh bìa. Bấm vào ảnh để xem video gốc. Số trên ảnh là lượt xem YouTube.</p>
+      </div>
+
+      <!-- Man Math -->
+      <article class="channel vs">
+        <div class="ch-top">
+          <div>
+            <div class="ch-id">
+              <img src="assets/brand-vs-avatar.webp" alt="Logo Man Math" width="64" height="64">
+              <div><p class="ch-kicker mono">Visual STEM · 9:16 · 90–120 giây</p><h3>Man Math</h3></div>
+            </div>
+            <p class="ch-desc">Giải thích Toán, Lý, Hoá, Sinh bằng hình 3D. Mỗi video mở bằng một hook meme trong 1–2 giây đầu, rồi đặt câu hỏi khiến người xem muốn biết đáp án.</p>
+          </div>
+          <div class="ch-links">
+            <a class="pill" href="https://www.youtube.com/channel/UCBg2Zg6XXJpZuQASHu0p6_w" target="_blank" rel="noopener">YouTube ↗</a>
+            <a class="pill" href="https://www.tiktok.com/@manmathvn" target="_blank" rel="noopener">TikTok ↗</a>
+          </div>
+        </div>
+        <ul class="craft">
+          <li>Dựng 3D bằng React Three Fiber</li><li>Hook meme mở đầu</li><li>Ảnh bìa: 1 câu hỏi + 1 hình chính</li><li>Giọng đọc AI tiếng Việt</li>
+        </ul>
+        <div class="reel">
+          <a class="card" href="https://youtube.com/shorts/jAP_HEVcTW4" target="_blank" rel="noopener"><div class="shot"><img src="assets/vs-natri.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="visual-stem:hoa-hoc/08-natri-no-trong-nuoc">1.419</span></div><span class="t">Vì sao natri nổ tung khi gặp nước?</span></a>
+          <a class="card" href="https://youtube.com/shorts/LUDBeyjG1cY" target="_blank" rel="noopener"><div class="shot"><img src="assets/vs-vo-cung.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="visual-stem:dai-so/04-vo-cung">1.332</span></div><span class="t">∞ có phải là một con số?</span></a>
+          <a class="card" href="https://youtube.com/shorts/rwTClNhuegU" target="_blank" rel="noopener"><div class="shot"><img src="assets/vs-ngay-sinh.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="visual-stem:xac-suat/02-nghich-ly-ngay-sinh">1.317</span></div><span class="t">Chỉ 23 người mà 50% có hai người trùng sinh nhật?</span></a>
+          <a class="card" href="https://youtube.com/shorts/-_ZDGwLmNaw" target="_blank" rel="noopener"><div class="shot"><img src="assets/vs-can-hai.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="visual-stem:dai-so/05-can-hai">1.294</span></div><span class="t">Tại sao √2 là số vô tỷ?</span></a>
+          <a class="card" href="https://youtube.com/shorts/6N-WjU8cKco" target="_blank" rel="noopener"><div class="shot"><img src="assets/vs-phi-newton.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="visual-stem:vat-ly/02-chat-long-phi-newton">1.263</span></div><span class="t">Chất lỏng mà đấm vào thì cứng như đá</span></a>
+          <a class="card" href="https://youtube.com/shorts/HpDxb9mfu2U" target="_blank" rel="noopener"><div class="shot"><img src="assets/vs-mobius.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="visual-stem:hinh-hoc/02-dai-mobius">1.239</span></div><span class="t">Tờ giấy chỉ có MỘT mặt? Dải Möbius</span></a>
+        </div>
+        <div class="facts">
+          <div class="fact"><b data-k="vs_n">40</b><span>video đã đăng</span></div>
+          <div class="fact"><b data-k="vs_yt">36.249</b><span>lượt xem YouTube</span></div>
+          <div class="fact"><b data-k="vs_over300">36/40</b><span>video vượt 300 lượt</span></div>
+          <div class="fact"><b data-k="vs_median">1.028</b><span>lượt xem trung vị mỗi video</span></div>
+        </div>
+      </article>
+
+      <!-- English Ko Khó -->
+      <article class="channel ekk">
+        <div class="ch-top">
+          <div>
+            <div class="ch-id">
+              <img src="assets/brand-ekk-avatar.webp" alt="Logo English Ko Khó" width="64" height="64">
+              <div><p class="ch-kicker mono">Từ vựng theo gốc từ · 9:16 · Facebook 1080×1350</p><h3>English Ko Khó</h3></div>
+            </div>
+            <p class="ch-desc">Biết một gốc từ là hiểu cả họ từ. Linh vật Capi dẫn dắt từng tập, các mảnh ghép của từ được tô màu theo vai trò. Ngoài video còn có bài ảnh đố vui đăng mỗi ngày trên fanpage.</p>
+          </div>
+          <div class="ch-links">
+            <a class="pill" href="https://www.youtube.com/channel/UC6fs6XY_l3zZKagDl_cCD-w" target="_blank" rel="noopener">YouTube ↗</a>
+            <a class="pill" href="https://www.facebook.com/profile.php?id=61595735467241" target="_blank" rel="noopener">Facebook ↗</a>
+          </div>
+        </div>
+        <ul class="craft">
+          <li>Linh vật Capi, 5 tư thế</li><li>Bộ nhận diện: logo, 18 màu, watermark</li><li>Intro thương hiệu đặt sau hook</li><li>Giọng Việt + giọng Anh bản ngữ</li>
+        </ul>
+        <div class="reel">
+          <a class="card" href="https://youtube.com/shorts/RgpXLxTMnf4" target="_blank" rel="noopener"><div class="shot"><img src="assets/ekk-015-scrib.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="english-ko-kho:015-scrib">2.675</span></div><span class="t">Subscribe ngày xưa nghĩa là gì?</span></a>
+          <a class="card" href="https://youtube.com/shorts/gIVh-KlMvPM" target="_blank" rel="noopener"><div class="shot"><img src="assets/ekk-010-myth.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="english-ko-kho:010-myth">1.327</span></div><span class="t">5 từ tiếng Anh mang tên thần thoại Hy Lạp</span></a>
+          <a class="card" href="https://youtube.com/shorts/20E129lKefs" target="_blank" rel="noopener"><div class="shot"><img src="assets/ekk-016-guess.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="english-ko-kho:016-guess">1.191</span></div><span class="t">Chưa học vẫn đoán ra nghĩa? Thử thách 4 từ</span></a>
+          <a class="card" href="https://youtube.com/shorts/lxG6MljP5CA" target="_blank" rel="noopener"><div class="shot"><img src="assets/ekk-026-meaning.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="english-ko-kho:026-meaning">1.143</span></div><span class="t">Nice từng nghĩa là ngốc?</span></a>
+          <a class="card" href="https://youtube.com/shorts/g_l3eS-sz7s" target="_blank" rel="noopener"><div class="shot"><img src="assets/ekk-018-eponym.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="english-ko-kho:018-eponym">1.107</span></div><span class="t">Sandwich là tên người?</span></a>
+          <a class="card" href="https://youtube.com/shorts/UYHcaeuRmUo" target="_blank" rel="noopener"><div class="shot"><img src="assets/ekk-014-affect.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="english-ko-kho:014-affect">1.080</span></div><span class="t">affect hay effect? Mẹo phân biệt</span></a>
+        </div>
+        <div class="extra">
+          <figure><img src="assets/brand-ekk-sheet.webp" alt="Bảng nhận diện English Ko Khó: logo, linh vật Capi 5 tư thế và bảng màu" loading="lazy" width="1200" height="750"><figcaption>Bảng nhận diện thương hiệu</figcaption></figure>
+          <figure><img src="assets/ekk-photo-p03-y-nghia-xua.webp" alt="Bài ảnh Facebook: 5 từ quen mà nghĩa xưa lạ hoắc" loading="lazy" width="540" height="676"><figcaption>Bài ảnh “Bạn có biết?”</figcaption></figure>
+          <figure><img src="assets/ekk-photo-p01-bat.webp" alt="Bài ảnh Facebook: 1 từ 2 nghĩa" loading="lazy" width="540" height="676"><figcaption>Bài ảnh “1 từ 2 nghĩa”</figcaption></figure>
+          <figure><img src="assets/ekk-photo-p05-fan.webp" alt="Bài ảnh Facebook: 1 từ 2 nghĩa" loading="lazy" width="540" height="676"><figcaption>Bài ảnh “1 từ 2 nghĩa”</figcaption></figure>
+        </div>
+        <div class="facts">
+          <div class="fact"><b data-k="ekk_n">29</b><span>video đã đăng</span></div>
+          <div class="fact"><b data-k="ekk_yt">16.836</b><span>lượt xem YouTube</span></div>
+          <div class="fact"><b data-k="ekk_top">2.675</b><span>lượt xem tập cao nhất</span></div>
+          <div class="fact"><b data-k="ekk_photos">20</b><span>bài ảnh Facebook đã đăng</span></div>
+          <div class="fact"><b>1.200+</b><span>người theo dõi fanpage</span></div>
+        </div>
+      </article>
+
+      <!-- VOZ Story -->
+      <article class="channel voz">
+        <div class="ch-top">
+          <div>
+            <div class="ch-id">
+              <img class="logo-wide" src="assets/brand-voz-logo.webp" alt="Logo VOZ Story" width="113" height="46">
+              <div><p class="ch-kicker mono">Explainer cắt dán · 16:9 dài + 9:16 phễu</p><h3>VOZ Story</h3></div>
+            </div>
+            <p class="ch-desc">Bóc tách những hệ thống vô hình chi phối cuộc sống: ai trả tiền cho mã giảm giá, vì sao phí ship lại rẻ, vì sao hủy thuê bao khó. Phong cách giấy cắt dán với ảnh có giấy phép, bản đồ và biểu đồ động.</p>
+          </div>
+          <div class="ch-links">
+            <a class="pill" href="https://www.youtube.com/channel/UCCebLeTxj_JwMYIuYpLSsjA" target="_blank" rel="noopener">YouTube ↗</a>
+          </div>
+        </div>
+        <div class="voz-long">
+          <a href="https://www.youtube.com/watch?v=JmDpPYplHT4" target="_blank" rel="noopener"><img src="assets/voz-long-007.webp" alt="Ảnh bìa video dài VOZ: Freeship? Ai đang trả tiền ship cho đơn hàng của bạn?" loading="lazy" width="960" height="540"></a>
+          <div>
+            <p class="mono">Video dài · 9 phút 11 giây</p>
+            <h4>Vì sao hàng đi nửa vòng Trái Đất mà phí ship vẫn rẻ?</h4>
+            <p>Mỗi video dài 9–10 phút được cắt thành 3 Short phễu, đăng nối tiếp trong những ngày sau để kéo người xem về video gốc.</p>
+          </div>
+        </div>
+        <div class="reel">
+          <a class="card" href="https://youtube.com/shorts/JSfvFnVWkAw" target="_blank" rel="noopener"><div class="shot"><img src="assets/voz-VOZ-002-S1.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="voz-story:VOZ-002-S1">1.173</span></div><span class="t">Tô bún 48.000đ trên app, quán nhận bao nhiêu?</span></a>
+          <a class="card" href="https://youtube.com/shorts/NgVLBwVFecI" target="_blank" rel="noopener"><div class="shot"><img src="assets/voz-VOZ-003-S1.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="voz-story:VOZ-003-S1">1.146</span></div><span class="t">Quy trình hủy mang tên một cuộc chiến 10 năm</span></a>
+          <a class="card" href="https://youtube.com/shorts/PWa4af16Q_w" target="_blank" rel="noopener"><div class="shot"><img src="assets/voz-VOZ-005-S2.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="voz-story:VOZ-005-S2">1.113</span></div><span class="t">Từng lỗ 4 xu mỗi đô, sàn lấy đâu ra mã giảm giá?</span></a>
+          <a class="card" href="https://youtube.com/shorts/mulfcPdAImo" target="_blank" rel="noopener"><div class="shot"><img src="assets/voz-VOZ-005-S1.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="voz-story:VOZ-005-S1">1.055</span></div><span class="t">Mã của sàn, nhưng người bán trả tới 40%?</span></a>
+          <a class="card" href="https://youtube.com/shorts/78rLwHKYGKk" target="_blank" rel="noopener"><div class="shot"><img src="assets/voz-VOZ-003-S2.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="voz-story:VOZ-003-S2">1.038</span></div><span class="t">Trả 17 đô mỗi buổi tập vì “tháng sau sẽ đi đều”</span></a>
+          <a class="card" href="https://youtube.com/shorts/T30NlWABdxQ" target="_blank" rel="noopener"><div class="shot"><img src="assets/voz-VOZ-003-S3.webp" alt="" loading="lazy" width="480" height="853"><span class="play"><i></i></span><span class="views" data-v="voz-story:VOZ-003-S3">968</span></div><span class="t">Người dùng biết mình hay quên hủy, và họ né luôn</span></a>
+        </div>
+        <div class="facts">
+          <div class="fact"><b><span data-k="voz_long">6</span> + <span data-k="voz_short">18</span></b><span>video dài + Short phễu</span></div>
+          <div class="fact"><b data-k="voz_yt">12.039</b><span>lượt xem YouTube</span></div>
+          <div class="fact"><b data-k="voz_over300">15/24</b><span>video vượt 300 lượt</span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section class="sec" id="quy-trinh">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2>Từ ý tưởng tới số liệu, không cần mở phần mềm dựng phim.</h2>
+        <p>Mỗi video đi qua 7 bước. Sáu bước do AI agent và máy chủ làm. Tôi giữ bước duyệt, vì đó là nơi quyết định chất lượng và thẩm mỹ.</p>
+      </div>
+      <div class="flow-hud" aria-hidden="true"><b id="tc">00:00:00</b><span class="of">/ 00:30:00</span><span class="flow-bar"><i></i></span></div>
+      <div class="flow-view">
+      <ol class="flow">
+        <li style="--i:0"><span class="big" aria-hidden="true">01</span><span class="tc mono">00:00 · Bước 1</span><h4>Nghiên cứu &amp; kịch bản</h4><p>AI agent tìm nguồn, kiểm chứng, viết kịch bản theo template của từng kênh.</p></li>
+        <li style="--i:1"><span class="big" aria-hidden="true">02</span><span class="tc mono">00:05 · Bước 2</span><h4>Hình ảnh &amp; dựng</h4><p>Cảnh 3D, cắt dán, chữ động dựng bằng code từ một file kịch bản.</p></li>
+        <li style="--i:2"><span class="big" aria-hidden="true">03</span><span class="tc mono">00:10 · Bước 3</span><h4>Giọng đọc AI</h4><p>TTS tiếng Việt tự host, ASR nghe lại để bắt lỗi phát âm.</p></li>
+        <li style="--i:3"><span class="big" aria-hidden="true">04</span><span class="tc mono">00:20 · Bước 4</span><h4>Render &amp; tự soát</h4><p>Render trên GPU, xuất contact sheet từng cảnh, ảnh bìa và caption.</p></li>
+        <li style="--i:4" class="human"><span class="big" aria-hidden="true">05</span><span class="tc mono">Người · Bước 5</span><h4>Duyệt</h4><p>Tôi xem bản cuối trên dashboard, duyệt hoặc góp ý để ra bản mới.</p></li>
+        <li style="--i:5"><span class="big" aria-hidden="true">06</span><span class="tc mono">Tự động · Bước 6</span><h4>Hẹn giờ đăng</h4><p>Xếp vào ngày trống kế tiếp, hẹn giờ trên YouTube, TikTok, Facebook.</p></li>
+        <li style="--i:6"><span class="big" aria-hidden="true">07</span><span class="tc mono">Liên tục · Bước 7</span><h4>Đo &amp; báo cáo</h4><p>Lấy số liệu mỗi 6 giờ, báo cáo phân tích mỗi tuần.</p></li>
+      </ol>
+      </div>
+      <p class="flow-note"><i aria-hidden="true"></i>Bước duy nhất cần người. Mốc thời gian là mục tiêu cho một video Man Math (≤ 30 phút).</p>
+    </div>
+  </section>
+
+  <!-- DATA -->
+  <section class="sec" id="du-lieu">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2>Sáng tạo theo số liệu.</h2>
+        <p>Hệ thống lấy số liệu mỗi 6 giờ. Báo cáo tuần trả lời câu hỏi nên làm dạng nội dung nào tiếp theo và đăng vào lúc nào.</p>
+      </div>
+      <div class="insights">
+        <div class="panel wide reveal">
+          <h3>Lượt xem YouTube cộng dồn của 3 kênh</h3>
+          <p>Tính theo ngày, giờ Việt Nam. Tăng từ <span data-k="series_first">14.851</span> lên <span data-k="yt_total">65.124</span> lượt trong 30 ngày.</p>
+          <div class="chart-wrap"><svg class="chart" id="growth-chart" viewBox="0 0 720 260" role="img" aria-label="Biểu đồ lượt xem YouTube cộng dồn theo ngày"></svg></div>
+          <p class="src">Nguồn: dữ liệu dashboard, cập nhật <span data-k="as_of">25/11/2026</span></p>
+        </div>
+        <div class="panel reveal">
+          <h3>Dạng nội dung quyết định nhiều hơn tiêu đề</h3>
+          <p>English Ko Khó, trung vị lượt xem YouTube sau 48 giờ theo dạng tập. Dạng kể chuyện của một từ được tăng tỉ lệ trong các tập sau.</p>
+          <div class="bars">
+            <div class="bar-row"><span>Chuyện của một từ</span><span class="bar"><i class="hot" style="width:100%"></i></span><b>1.105</b></div>
+            <div class="bar-row"><span>1 gốc → N từ</span><span class="bar"><i style="width:22.3%"></i></span><b>246</b></div>
+          </div>
+          <p class="src">n = 3 và n = 17 tập · báo cáo tuần ngày 23/11/2026</p>
+        </div>
+        <div class="panel reveal">
+          <h3>Đăng đủ lịch là đòn bẩy lớn nhất</h3>
+          <p>Lượt xem YouTube tăng thêm trong tuần của cả 3 kênh. Tuần 09–15/11 là tuần đầu tiên cả 3 kênh lấp đủ lịch đăng.</p>
+          <div class="bars">
+            <div class="bar-row"><span>Trước khi đủ lịch</span><span class="bar"><i style="width:60.5%"></i></span><b>11.117</b></div>
+            <div class="bar-row"><span>Tuần đủ lịch</span><span class="bar"><i class="hot" style="width:100%"></i></span><b>18.378</b></div>
+          </div>
+          <p class="src">+65% · báo cáo tuần ngày 15/11/2026</p>
+        </div>
+      </div>
+
+      <div class="tools reveal" aria-label="Công cụ">
+        <span>Remotion<small>dựng video bằng React</small></span>
+        <span>React Three Fiber<small>3D</small></span>
+        <span>FFmpeg<small>âm thanh -14 LUFS, H.264</small></span>
+        <span>Gemini TTS · ZipVoice<small>giọng đọc AI</small></span>
+        <span>PhoWhisper<small>kiểm tra phát âm</small></span>
+        <span>Claude Code<small>AI agent sản xuất</small></span>
+        <span>Playwright<small>hẹn giờ đăng</small></span>
+        <span>n8n · Python · Node.js</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- OUTRO -->
+<div class="outro">
+<div class="mega" aria-hidden="true">
+  <div class="mega-row r1"><span>Tông Quân Studio</span><span class="a">✦</span><span class="o">AI Creative</span><span class="a">✦</span><span>Tông Quân Studio</span><span class="a">✦</span><span class="o">AI Creative</span></div>
+  <div class="mega-row r2"><span class="o">Video ngắn</span><span class="a">✦</span><span>Tự động</span><span class="a">✦</span><span class="o">Đo được</span><span class="a">✦</span><span>Video ngắn</span><span class="a">✦</span><span class="o">Tự động</span><span class="a">✦</span><span>Đo được</span></div>
+</div>
+<section class="contact" id="lien-he">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="mono" style="opacity:.6;margin:0">Nguyễn Tông Quân · Hà Nội</p>
+      <h2>Cần video AI đẹp, ra đều và đo được hiệu quả?</h2>
+      <p>Cử nhân Trí tuệ Nhân tạo (UET, ĐHQG Hà Nội), kỹ sư AI, Giải Nhất HBLab Hackathon 2026. Sẵn sàng cho vị trí AI Creative.</p>
+    </div>
+    <div class="contact-list">
+      <div class="contact-row"><span class="k">Email</span><span id="email">ah929586@gmail.com</span><button class="copy" type="button" data-copy="ah929586@gmail.com">Sao chép</button></div>
+      <div class="contact-row"><span class="k">LinkedIn</span><a href="https://www.linkedin.com/in/quan-nguyen-tong-6085192ba/" target="_blank" rel="noopener">Quan Nguyen Tong ↗</a></div>
+      <div class="contact-row"><span class="k">GitHub</span><a href="https://github.com/quankaka11/" target="_blank" rel="noopener">quankaka11 ↗</a></div>
+    </div>
+  </div>
+</section>
+<footer>
+  <div class="wrap">
+    <span>© 2026 Tông Quân Studio</span>
+    <span>Số liệu cập nhật <span data-k="as_of">25/11/2026</span></span>
+  </div>
+</footer>
+</div>
+<div class="cursor" aria-hidden="true"><span>XEM</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script id="series" type="application/json">{"labels":["26/10","27/10","28/10","29/10","30/10","31/10","01/11","02/11","03/11","04/11","05/11","06/11","07/11","08/11","09/11","10/11","11/11","12/11","13/11","14/11","15/11","16/11","17/11","18/11","19/11","20/11","21/11","22/11","23/11","24/11","25/11"],"values":[14851,15543,16541,18139,19119,20431,21877,23306,25118,26565,29729,31466,33355,33397,37459,39929,44760,47307,48847,50238,51775,52910,54238,55825,56575,58675,61496,62528,63997,64685,65124]}</script>
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fmt = function (n) { return Math.round(n).toLocaleString('vi-VN'); };
+
+  /* ---- Biểu đồ lượt xem cộng dồn ---- */
+  var svg = document.getElementById('growth-chart');
+  var data = { labels: [], values: [] };
+  try { data = JSON.parse(document.getElementById('series').textContent); } catch (e) {}
+  if (svg && data.values.length > 1) {
+    var NS = 'http://www.w3.org/2000/svg', W = 720, H = 260, L = 56, R = 70, T = 16, B = 34;
+    var max = Math.max.apply(null, data.values);
+    var step = max > 40000 ? 20000 : 10000, top = Math.ceil(max / step) * step;
+    var x = function (i) { return L + i * (W - L - R) / (data.values.length - 1); };
+    var y = function (v) { return T + (H - T - B) * (1 - v / top); };
+    var el = function (tag, attrs, text) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; svg.appendChild(e); return e; };
+    for (var g = 0; g <= top; g += step) {
+      el('line', { x1: L, x2: W - R, y1: y(g), y2: y(g), 'class': 'grid' });
+      el('text', { x: L - 8, y: y(g) + 4, 'text-anchor': 'end' }, g === 0 ? '0' : (g / 1000) + 'k');
+    }
+    var n = data.values.length, ticks = [0, Math.round((n - 1) / 2), n - 1];
+    ticks.forEach(function (i) { el('text', { x: x(i), y: H - 10, 'text-anchor': i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle') }, data.labels[i]); });
+    var d = data.values.map(function (v, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
+    el('path', { d: d + ' L' + x(n - 1) + ' ' + y(0) + ' L' + x(0) + ' ' + y(0) + ' Z', 'class': 'area' });
+    var line = el('path', { d: d, 'class': 'lineP' });
+    var ex = x(n - 1), ey = y(data.values[n - 1]);
+    el('circle', { cx: ex, cy: ey, r: 5, 'class': 'halo' });
+    el('circle', { cx: ex, cy: ey, r: 5, 'class': 'dot' });
+    el('text', { x: ex + 10, y: ey + 5, 'class': 'endlbl' }, fmt(data.values[n - 1]));
+    var len = line.getTotalLength();
+    line.style.setProperty('--len', len);
+    line.style.strokeDasharray = len;
+  }
+
+  /* ---- Đếm số khi cuộn tới ---- */
+  function countUp(b) {
+    var m = b.textContent.match(/^([^\d]*)([\d.]+)(.*)$/);
+    if (!m) return;
+    var target = parseInt(m[2].replace(/\./g, ''), 10), t0 = null, dur = 1400;
+    function tick(t) {
+      if (!t0) t0 = t;
+      var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      b.textContent = m[1] + fmt(target * e) + m[3];
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  if (!reduce && 'IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var t = en.target;
+        if (t.classList.contains('count')) countUp(t);
+        t.classList.add('in');
+        io.unobserve(t);
+      });
+    }, { threshold: 0.35 });
+    document.querySelectorAll('.count, .panel, .chart').forEach(function (e) { io.observe(e); });
+
+    /* ---- Điện thoại nghiêng theo con trỏ ---- */
+    var phones = document.querySelector('.phones');
+    if (phones && window.matchMedia('(hover: hover)').matches) {
+      var hero = document.querySelector('.hero');
+      hero.addEventListener('pointermove', function (e) {
+        var r = phones.getBoundingClientRect();
+        phones.style.setProperty('--px', ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
+        phones.style.setProperty('--py', ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+      });
+      hero.addEventListener('pointerleave', function () { phones.style.setProperty('--px', 0); phones.style.setProperty('--py', 0); });
+
+      /* ---- Ảnh bìa nghiêng 3D khi rê chuột ---- */
+      document.querySelectorAll('.card .shot').forEach(function (s) {
+        s.addEventListener('pointermove', function (e) {
+          var r = s.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+          s.style.setProperty('--ry', ((px - 0.5) * 14).toFixed(2) + 'deg');
+          s.style.setProperty('--rx', ((0.5 - py) * 14).toFixed(2) + 'deg');
+          s.style.setProperty('--gx', (px * 100).toFixed(0) + '%');
+          s.style.setProperty('--gy', (py * 100).toFixed(0) + '%');
+        });
+        s.addEventListener('pointerleave', function () { s.style.setProperty('--rx', '0deg'); s.style.setProperty('--ry', '0deg'); });
+      });
+    }
+  }
+
+  /* ---- Sao chép email ---- */
+  document.querySelectorAll('.copy').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var text = b.getAttribute('data-copy');
+      var done = function () { b.textContent = 'Đã sao chép'; setTimeout(function () { b.textContent = 'Sao chép'; }, 1800); };
+      var fallback = function () {
+        var el = document.getElementById('email'), r = document.createRange(); r.selectNodeContents(el);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Đã chọn, nhấn Ctrl+C';
+      };
+      try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+    });
+  });
+})();
+</script>
+<script>
+/* ===== Hiệu ứng cuộn: GSAP ScrollTrigger + Lenis. Tạo theo đúng thứ tự xuất hiện trên trang. ===== */
+(() => {
+  if (!window.gsap || !window.ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
+  const $ = (q, r = document) => r.querySelector(q);
+  const $$ = (q, r = document) => Array.from(r.querySelectorAll(q));
+
+  // Tách chữ thành từng từ, giữ nguyên thẻ con như <b>. Trả về các span bọc ngoài.
+  const splitWords = (el, cls) => {
+    if (!el) return [];
+    if (!el.dataset.split) {
+      el.dataset.split = '1';
+      const walk = (node) => Array.from(node.childNodes).forEach((n) => {
+        if (n.nodeType === 3) {
+          const frag = document.createDocumentFragment();
+          n.textContent.split(/(\s+)/).forEach((part) => {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
+            const w = document.createElement('span'); w.className = cls;
+            const i = document.createElement('span'); i.textContent = part;
+            w.appendChild(i); frag.appendChild(w);
+          });
+          n.replaceWith(frag);
+        } else if (n.nodeType === 1) walk(n);
+      });
+      walk(el);
+    }
+    return $$('.' + cls, el);
+  };
+
+  const mm = gsap.matchMedia();
+  mm.add({
+    motion: '(prefers-reduced-motion: no-preference)',
+    wide: '(min-width: 900px) and (min-height: 700px)',
+    fine: '(hover: hover) and (pointer: fine)'
+  }, (ctx) => {
+    const { motion, wide, fine } = ctx.conditions;
+    if (!motion) return;
+    const cleanups = [];
+
+    /* Cuộn mượt */
+    let lenis = null;
+    if (window.Lenis) {
+      lenis = new Lenis({ lerp: 0.085 });
+      lenis.on('scroll', ScrollTrigger.update);
+      const raf = (t) => lenis.raf(t * 1000);
+      gsap.ticker.add(raf);
+      gsap.ticker.lagSmoothing(0);
+      cleanups.push(() => { gsap.ticker.remove(raf); lenis.destroy(); });
+    }
+    const onAnchor = (e) => {
+      const id = e.currentTarget.getAttribute('href');
+      const target = id && id.length > 1 ? document.querySelector(id) : null;
+      if (!target) return;
+      e.preventDefault();
+      if (lenis) lenis.scrollTo(target, { offset: -60, duration: 1.6 });
+      else target.scrollIntoView({ behavior: 'smooth' });
+    };
+    const anchors = $$('a[href^="#"]');
+    anchors.forEach((a) => a.addEventListener('click', onAnchor));
+    cleanups.push(() => anchors.forEach((a) => a.removeEventListener('click', onAnchor)));
+
+    /* Thanh tiến độ đầu trang */
+    gsap.to('.progress', { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: 0.3 } });
+
+    /* Hero tách ra khi cuộn đi: chữ trôi lên, 3 điện thoại bung ra ba hướng */
+    const heroST = () => ({ trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 0.6 });
+    gsap.to('.hero-copy', { yPercent: -22, opacity: 0.1, ease: 'none', scrollTrigger: heroST() });
+    gsap.to('.phone:nth-child(1)', { x: -170, y: -30, rotation: -18, ease: 'none', scrollTrigger: heroST() });
+    gsap.to('.phone:nth-child(2)', { y: -200, scale: 1.14, ease: 'none', scrollTrigger: heroST() });
+    gsap.to('.phone:nth-child(3)', { x: 170, y: -10, rotation: 20, ease: 'none', scrollTrigger: heroST() });
+    gsap.to('.timeline', { scale: 0.92, opacity: 0.3, ease: 'none', scrollTrigger: { trigger: '.timeline', start: 'top 45%', end: 'bottom top', scrub: 0.6 } });
+
+    /* Tuyên ngôn: ghim lại, từng chữ sáng lên theo cuộn */
+    const mw = splitWords($('.mani'), 'mw');
+    gsap.timeline({ scrollTrigger: { trigger: '.manifesto', start: 'top top', end: '+=150%', pin: true, scrub: 0.6 } })
+      .fromTo(mw, { opacity: 0.1, filter: 'blur(8px)', y: 14 }, { opacity: 1, filter: 'blur(0px)', y: 0, stagger: 0.1, ease: 'none' })
+      .to({}, { duration: 0.6 });
+
+    /* Tiêu đề mục: từng từ trồi lên từ dưới khe */
+    const heading = (h) => {
+      const inner = splitWords(h, 'w').map((w) => w.firstElementChild);
+      gsap.from(inner, { yPercent: 120, rotate: 7, duration: 1.15, ease: 'power4.out', stagger: 0.05, scrollTrigger: { trigger: h, start: 'top 88%' } });
+    };
+    heading($('#kenh .sec-head h2'));
+
+    /* Ba kênh xếp chồng: kênh sau trượt lên đè kênh trước, kênh trước lùi sâu và tối lại */
+    const kenh = $('#kenh');
+    const cards = $$('#kenh .channel');
+    kenh.classList.add('stacking');
+    const setTops = () => cards.forEach((c) => { c.style.top = Math.min(72, window.innerHeight - c.offsetHeight - 24) + 'px'; });
+    setTops();
+    ScrollTrigger.addEventListener('refreshInit', setTops);
+    cards.forEach((c, i) => {
+      const next = cards[i + 1];
+      if (!next) return;
+      gsap.to(c, { scale: 0.86, '--dim': 0.65, ease: 'none', scrollTrigger: { trigger: next, start: 'top bottom', end: 'top 10%', scrub: true } });
+    });
+    cleanups.push(() => {
+      kenh.classList.remove('stacking');
+      cards.forEach((c) => { c.style.top = ''; });
+      ScrollTrigger.removeEventListener('refreshInit', setTops);
+    });
+
+    /* Ảnh bìa, bài ảnh, số liệu kênh: lật lên theo nhóm */
+    const rise = (q, start = 'top 92%') => ScrollTrigger.batch(q, {
+      start, once: true,
+      onEnter: (b) => gsap.from(b, { y: 90, opacity: 0, rotationX: -24, transformPerspective: 900, transformOrigin: '50% 100%', stagger: 0.07, duration: 1.1, ease: 'power3.out', clearProps: 'transform,opacity' })
+    });
+    rise('#kenh .reel .card, #kenh .extra figure, #kenh .fact');
+
+    /* Ảnh video dài VOZ: thu nhỏ dần như máy quay lùi */
+    gsap.fromTo('.voz-long img', { scale: 1.25, yPercent: -8 }, { scale: 1, yPercent: 0, ease: 'none', scrollTrigger: { trigger: '.voz-long', start: 'top bottom', end: 'bottom 35%', scrub: true } });
+
+    /* Quy trình: ghim lại, 7 bước chạy ngang, timecode chạy theo cuộn */
+    heading($('#quy-trinh .sec-head h2'));
+    if (wide) {
+      const sec = $('#quy-trinh');
+      const track = $('.flow', sec), view = $('.flow-view', sec), items = $$('.flow li', sec);
+      const tc = $('#tc'), bar = $('.flow-bar i', sec);
+      sec.classList.add('flow-h');
+      const dist = () => Math.max(0, track.scrollWidth - view.clientWidth);
+      const pad = (n) => String(n).padStart(2, '0');
+      gsap.to(track, {
+        x: () => -dist(), ease: 'none',
+        scrollTrigger: {
+          trigger: sec, start: 'top top', end: () => '+=' + Math.round(dist() * 1.25 + 300),
+          pin: true, scrub: 0.8, invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            const p = self.progress, sec30 = Math.round(p * 1800);
+            tc.textContent = '00:' + pad(Math.floor(sec30 / 60)) + ':' + pad(sec30 % 60);
+            bar.style.transform = 'scaleX(' + p.toFixed(3) + ')';
+            const k = Math.min(items.length - 1, Math.floor(p * items.length));
+            items.forEach((li, i) => li.classList.toggle('on', i === k));
+          }
+        }
+      });
+      cleanups.push(() => { sec.classList.remove('flow-h'); items.forEach((li) => li.classList.remove('on')); tc.textContent = '00:00:00'; });
+    } else {
+      rise('#quy-trinh .flow li');
+    }
+
+    /* Dữ liệu: đường biểu đồ vẽ theo cuộn */
+    heading($('#du-lieu .sec-head h2'));
+    const line = $('#growth-chart .lineP');
+    if (line) {
+      const len = line.getTotalLength();
+      const st = () => ({ trigger: '#growth-chart', start: 'top 85%', end: 'bottom 50%', scrub: 0.6 });
+      gsap.fromTo(line, { strokeDashoffset: len }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: st() });
+      gsap.fromTo('#growth-chart .area', { opacity: 0 }, { opacity: 1, ease: 'none', scrollTrigger: st() });
+      gsap.fromTo('#growth-chart .dot, #growth-chart .endlbl', { opacity: 0, scale: 0.4, transformOrigin: '50% 50%' }, { opacity: 1, scale: 1, ease: 'back.out(3)', duration: 0.5, scrollTrigger: { trigger: '#growth-chart', start: 'bottom 52%', toggleActions: 'play none none reverse' } });
+    }
+    rise('#du-lieu .panel:not(.wide), #du-lieu .tools span', 'top 94%');
+
+    /* Phần kết: khung tối mở rộng ra mép, hai hàng chữ khổng lồ trôi ngược chiều */
+    gsap.fromTo('.outro', { clipPath: 'inset(8% 5% 0% 5% round 56px)' }, { clipPath: 'inset(0% 0% 0% 0% round 0px)', ease: 'none', scrollTrigger: { trigger: '.outro', start: 'top bottom', end: 'top 25%', scrub: true } });
+    const megaST = () => ({ trigger: '.mega', start: 'top bottom', end: 'bottom top', scrub: 0.5 });
+    gsap.fromTo('.mega .r1', { xPercent: 0 }, { xPercent: -32, ease: 'none', scrollTrigger: megaST() });
+    gsap.fromTo('.mega .r2', { xPercent: -32 }, { xPercent: 0, ease: 'none', scrollTrigger: megaST() });
+    heading($('.contact h2'));
+
+    /* Lưới ảnh bìa nghiêng theo tốc độ cuộn */
+    const setSkew = gsap.quickSetter('.reel', 'skewY', 'deg');
+    const proxy = { s: 0 }, clamp = gsap.utils.clamp(-6, 6);
+    ScrollTrigger.create({
+      onUpdate: (self) => {
+        const s = clamp(self.getVelocity() / -450);
+        if (Math.abs(s) > Math.abs(proxy.s)) {
+          proxy.s = s;
+          gsap.to(proxy, { s: 0, duration: 0.9, ease: 'power3', overwrite: true, onUpdate: () => setSkew(proxy.s) });
+        }
+      }
+    });
+    cleanups.push(() => gsap.set('.reel', { clearProps: 'transform' }));
+
+    /* Con trỏ: vòng tròn theo chuột, phóng to thành "XEM" trên ảnh bìa */
+    if (fine) {
+      const cur = $('.cursor');
+      const xTo = gsap.quickTo(cur, 'x', { duration: 0.35, ease: 'power3' });
+      const yTo = gsap.quickTo(cur, 'y', { duration: 0.35, ease: 'power3' });
+      const move = (e) => { xTo(e.clientX); yTo(e.clientY); cur.classList.add('show'); };
+      const over = (e) => cur.classList.toggle('big', !!(e.target.closest && e.target.closest('.card, .phone, .voz-long a')));
+      const leave = () => cur.classList.remove('show', 'big');
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerover', over);
+      document.documentElement.addEventListener('pointerleave', leave);
+      cleanups.push(() => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerover', over);
+        document.documentElement.removeEventListener('pointerleave', leave);
+        leave();
+      });
+    }
+
+    if (ScrollTrigger.sort) ScrollTrigger.sort();
+    return () => cleanups.forEach((f) => f());
+  });
+
+  window.addEventListener('load', () => ScrollTrigger.refresh());
+})();
+</script>
+</body>
+</html>
